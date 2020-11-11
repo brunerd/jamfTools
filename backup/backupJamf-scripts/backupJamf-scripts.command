@@ -137,7 +137,7 @@ ensureAPIUSER
 ensureAPIPASS
 
 #trim APIURL to just the host name
-APIHOSTNAME=$(sed -e 's/^http[s]*:\/\///g' -e 's/:.*$//' <<< "${APIURL}")
+APIHOSTNAME=$(sed -e 's/^http[s]*:\/\///g' -e 's/:.*$//' -e 's/\/$//' <<< "${APIURL}")
 stampedFolder="scripts-${APIHOSTNAME}-${dateStampNow}"
 destinationFolder="${myFolderPath}"/"${stampedFolder}"
 destinationCSVFilename="scripts-${APIHOSTNAME}-${dateStampNow}.csv"
@@ -183,8 +183,8 @@ for((i=0; i < ${scriptCount:-0}; i++)); do
 	#indented bullets for the terminal output
 	echo -e "\t• ${scriptName}.sh"
 
+	#get the text of the script contents
 	scriptContents=$(jpt -T $.results[$i].scriptContents <<< "$rawJSON" )
-
 	#save script with generic .sh for Quicklook if anything, get fancier if you want and analyze the first line
 	cat <<< "${scriptContents}" > "${destinationFolder}"/scripts/"${scriptName}".sh
 
@@ -200,5 +200,5 @@ for((i=0; i < ${scriptCount:-0}; i++)); do
 	chmod +x "${destinationFolder}"/scripts/"${scriptName}".sh
 done
 
-echo "Done. Opening: ${destinationFolder}"
-open "${destinationFolder}"
+echo "Done."
+[ "$(uname)" == "Darwin" ] && echo "Opening: ${destinationFolder}" && open "${destinationFolder}"
