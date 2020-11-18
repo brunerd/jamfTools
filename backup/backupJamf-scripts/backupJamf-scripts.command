@@ -149,7 +149,7 @@ tokenHeader="$(ensureTokenHeader "${APIUSER}" "${APIPASS}" "${APIURL}")"
 echo "Querying ${APIHOSTNAME}..."
 
 #get our raw JSON reply
-rawJSON=$(/usr/bin/curl -s "${sslOpt}" "${APIURL}/uapi/v1/scripts" -X GET -H "${tokenHeader}" )
+rawJSON=$(/usr/bin/curl -s "${sslOpt}" "${APIURL}/uapi/v1/scripts?page=0&page-size=1000" -X GET -H "${tokenHeader}" )
 
 #if httpStatus is present something went wrong
 httpResponse=$(jpt /httpStatus <<< "${rawJSON}")
