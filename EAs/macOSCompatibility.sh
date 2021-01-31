@@ -400,7 +400,7 @@ function getCompatibleOSes
 		done
 
 		#trim leading and trailing spaces
-		myVersions=$(sed -e 's/^[ \t]*//' -e 's/[ \t]*$//' <<< "${myVersions}")
+		myVersions=$(sed -e $'s/^[ \t]*//' -e $'s/[ \t]*$//' <<< "${myVersions}")
 
 		#output for EA
 		if [ "${runMode}" == "EA" ]; then
@@ -472,7 +472,7 @@ function checkCompatbility
 	fi
 
 	#clean trailing whitespace
-	supportedOS_output=$(sed 's/[ \t]*$//' <<< "${supportedOS_output}")
+	supportedOS_output=$(sed $'s/[ \t]*$//' <<< "${supportedOS_output}")
 
 	if [ "${runMode}" == "EA" ]; then
 		#special metal check for 2010 and 2012 MacPros
