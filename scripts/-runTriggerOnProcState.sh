@@ -1,5 +1,5 @@
 #!/bin/bash
-#Joel Bruner -runTirggerOnProcState run a jamf trigger depending on the running state (IS/NOT) of a process name
+#Joel Bruner
 
 #the process name that will be tested
 process="${4}"
@@ -7,31 +7,37 @@ process="${4}"
 #if it "IS" or "NOT"* running
 condition="${5:-NOT}"
 
+function jamflog {
+	local logFile="{$2:-/var/log/jamf.log}"
+	#if it exists but we cannot write to the log or it does not exist, unset and tee simply echoes
+	[ -e "${logFile}" -a ! -w "${logFile}" ] && unset logFile
+	#this will tee to jamf.log in the jamf log format: <Day> <Month> DD HH:MM:SS <Computer Name> ProcessName[PID]: <Message>
+	echo "$(date +'%a %b %d %H:%M:%S') ${myComputerName:="$(scutil --get ComputerName)"} ${myName:="$(basename "${0%.*}")"}[${myPID:=$$}]: ${1}" | tee -a "${logFile}" 2>/dev/null
+}
+
 #ensure we have something for process name 
 if [ -z "${4}" ]; then
-    echo "No process name given, exiting"
+    jamflog "No process name given, exiting"
     exit 1
 fi
 
 #make sure have something, test all parameters
 if [ -z "${6}${7}${8}${9}${10}${11}" ]; then
-    echo "No arguments given, exiting"
+    jamflog "No arguments given, exiting"
     exit 1
 fi
 
 #if process exists and condition is for to NOT be running then bail
 if pgrep "${process}" &>/dev/null && [ "${condition}" = "NOT" ]; then
-	echo "Condition NOT and process IS running: ${process} ($(pgrep "${process}"))"
-	echo "Exiting"
-	exit 1
+	jamflog "Exiting. Condition NOT and process IS running: ${process} ($(pgrep "${process}"))"
+	exit
 elif ! pgrep "${process}" &>/dev/null && [ "${condition}" = "IS" ]; then
-	echo "Condition IS and process is NOT running: ${process}"
-	echo "Exiting"
-	exit 1
+	jamflog "Exiting. Condition IS and process is NOT running: ${process}"
+	exit
 elif pgrep "${process}" &>/dev/null && [ "${condition}" = "IS" ]; then
-	echo "Condition IS and process IS running: ${process} ($(pgrep "${process}"))"
+	jamflog "Continuing. Condition IS and process IS running: ${process} ($(pgrep "${process}"))"
 elif ! pgrep "${process}" &>/dev/null && [ "${condition}" = "NOT" ]; then
-	echo "Condition NOT and process is NOT running: ${process}"
+	jamflog "Continuing. Condition NOT and process is NOT running: ${process}"
 fi
 
 #change IFS to tab and newline
@@ -50,10 +56,10 @@ for (( i=0; i < ${#argArray[@]}; i++ )); do
 		continue
     fi
     
-    echo "Executing: jamf policy -event \"${item}\""
+    jamflog "Executing: jamf policy -event \"${item}\""
     #send output to null the policy itself will be capturing it's output and logging it
     jamf policy -event "${item}" 2>/dev/null 1>&2
-    echo "Finished: jamf policy -event \"${item}\", exit code: $?"
+    jamflog "Finished: jamf policy -event \"${item}\", exit code: $?"
 done
 
 exit 0
