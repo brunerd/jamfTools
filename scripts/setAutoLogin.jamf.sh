@@ -12,8 +12,7 @@ LICENSE_BLOCK
 # VARIABLES #
 #############
 
-#JAMF script parameters are shifted ahead 3
-
+#JAMF script parameters are shifted +3
 #provide a username, if blank will disable autologin
 USERNAME="${4}"
 
@@ -47,11 +46,8 @@ function kcpasswordEncode {
 		#macOS cipher hex ascii representation array
 		local cipherHex_array=( 7D 89 52 23 D2 BC DD EA A3 B9 1F )
 
-		#cycle through each character of the string		
-		for ((i=0; i < ${#thisString}; i++)); do
-			#get one character
-			local thisChar="${thisString:$i:1}"
-
+		#cycle through each element of the array
+		for ((i=0; i < ${#thisStringHex_array[@]}; i++)); do
 			#use modulus to loop through the cipher array elements
 			local charHex_cipher=${cipherHex_array[$(( $i % 10 ))]}
 
@@ -82,7 +78,7 @@ function kcpasswordEncode {
 
 #quit if not root
 if [ "${UID}" != 0 ]; then
-	echo "Please run as root, exiting."
+	jamflog "Please run as root, exiting."
 	exit 1
 fi
 
@@ -111,7 +107,7 @@ if [ -n "${USERNAME}" ]; then
 	/usr/bin/defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser -string "${USERNAME}"
 
 	jamflog "Auto login enabled for '${USERNAME}'"
-#otherwise turn OFF
+#if not USERNAME turn OFF
 else
 	[ -f /etc/kcpassword ] && rm -f /etc/kcpassword
 	/usr/bin/defaults delete /Library/Preferences/com.apple.loginwindow autoLoginUser &> /dev/null
